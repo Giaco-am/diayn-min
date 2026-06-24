@@ -1,0 +1,15 @@
+# pointnav / InvertedPendulum
+uv run python scripts/train.py
+uv run python scripts/plot_training.py    # -> training_curves.png
+uv run python scripts/visualize.py        # -> skills.png + GIFs
+
+# N:M ratio study (self-contained: trains + plots)
+uv run python scripts/compare_ratios.py   # -> ratio_curves.png, ratio_returns.png
+
+# multi-seed robustness (self-contained)
+uv run python scripts/robustness.py       # -> seed_curves.png, seed_return_heatmap.png
+
+# downstream goal-reaching on pointnav
+uv run python scripts/train.py            # env = pointnav
+uv run python scripts/plot_training.py    # -> training_curves.png (optional)
+uv run python scripts/hierarchical.py     # -> hierarchical_reward_vs_skills.png, hierarchical_goals.png
