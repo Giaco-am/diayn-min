@@ -1,14 +1,9 @@
 """Compare discriminator:policy update ratios (the N:M asynchronous update rule).
 
-The policy and the discriminator play a minimax game: skills become diverse by
-chasing the discriminator, but the discriminator can only tell apart skills that
-are already diverse. The paper uses synchronous (1:1) updates but notes that
-balancing the two more carefully might speed things up. Here we do N
-discriminator updates for every M policy updates and compare.
-
 Trains one run per ratio in config["ratios"] on InvertedPendulum (at config's
-seed), then writes a comparison figure. Run with:
+seed), then writes a comparison figure. 
 
+Example usage:
     uv run python scripts/compare_ratios.py
 """
 
@@ -25,8 +20,7 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from diayn.agent import DIAYNAgent
-from diayn.eval import skill_returns
+
 from train import load_config, train_one
 
 ENV = "InvertedPendulum-v5"
@@ -76,25 +70,7 @@ def main():
     fig.savefig(out_dir / "ratio_curves.png", dpi=150)
     print(f"Saved {out_dir / 'ratio_curves.png'}")
 
-    # best-skill task return per ratio (the task reward is never seen in training)
-    labels, bests = [], []
-    for (n, m), run_dir in runs:
-        agent, payload = DIAYNAgent.load(str(run_dir / "checkpoint.pt"))
-        returns = skill_returns(agent, payload["env"], payload["max_episode_steps"])
-        labels.append(f"{n}:{m}")
-        bests.append(returns.max())
-        print(f"ratio {n}:{m}  best-skill return {returns.max():8.1f}")
-
-    fig, ax = plt.subplots(figsize=(6, 4))
-    ax.bar(range(len(labels)), bests, color=colors, alpha=0.85)
-    ax.set_xticks(range(len(labels)), labels)
-    ax.set(title="Best-skill task return by ratio", xlabel="disc:policy",
-           ylabel="best skill return")
-    ax.grid(alpha=0.3, axis="y")
-    fig.tight_layout()
-    fig.savefig(out_dir / "ratio_returns.png", dpi=150)
-    print(f"Saved {out_dir / 'ratio_returns.png'}")
-
+    
 
 if __name__ == "__main__":
     main()

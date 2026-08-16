@@ -3,7 +3,7 @@
 DIAYN never sees the task reward while training. To check whether any skill
 happens to solve the task (the paper's Figure 15 analysis, and to rank skills
 for plotting) we roll out each skill deterministically and sum the real reward.
-A fixed per-(skill, episode) reset seed keeps the rankings reproducible."""
+"""
 
 import numpy as np
 
@@ -22,7 +22,7 @@ def skill_returns(agent, env_name, max_episode_steps=None,
     for z in range(agent.n_skills):
         rets, lens = [], []
         for ep in range(episodes_per_skill):
-            obs, _ = env.reset(seed=20_000 + 100 * z + ep)
+            obs, _ = env.reset(seed=20 + 100 * z + ep)
             done, ret, t = False, 0.0, 0
             while not done:
                 action = agent.act(obs, z, deterministic=deterministic)

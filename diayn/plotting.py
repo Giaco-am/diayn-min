@@ -6,7 +6,7 @@ from .envs import POINTNAV
 
 
 def rollout(env, agent, skill, deterministic=True, render=False):
-    """Roll out one episode of `skill`; return (states, x_positions, return, frames)."""
+    """Roll out one episode of 'skill'; return (states, x_positions, return, frames)."""
     obs, _ = env.reset(seed=10_000 + skill)
     states, frames, xs, total_reward = [obs], [], [], 0.0
     done = False
@@ -32,8 +32,8 @@ def to_series(env_name, states, xs):
 
 
 def draw_skills(ax, env_name, series, cmap, t=None):
-    """Draw one frame of skill trajectories. `series` is a list of (skill, data)
-    pairs; if `t` is given, only the first t points of each trajectory are drawn
+    """Draw one frame of skill trajectories. 'series' is a list of (skill, data)
+    pairs; if 't' is given, only the first t points of each trajectory are drawn
     (used for the animation)."""
     for z, data in series:
         color = cmap(z % cmap.N)

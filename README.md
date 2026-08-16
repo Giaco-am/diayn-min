@@ -1,7 +1,7 @@
 # diayn-min
 
-A minimal replication of **DIAYN** — *Diversity is All You Need: Learning Skills
-without a Reward Function* (Eysenbach et al., 2018) — in plain PyTorch.
+A minimal replication of **DIAYN** - *Diversity is All You Need: Learning Skills
+without a Reward Function* (Eysenbach et al., 2018).
 
 DIAYN learns a set of distinguishable skills with no task reward. A skill
 `z - p(z)` is sampled at the start of each episode and held fixed. A
@@ -17,18 +17,18 @@ regions of the state space.
 
 ## What's here
 
-- `diayn/` — the core algorithm: networks, agent, replay buffer, the 2D
+- `diayn/` - the core algorithm: networks, agent, replay buffer, the 2D
   navigation environment, evaluation and plotting helpers.
-- `scripts/train.py` — train one run.
-- `scripts/compare_ratios.py` — the **N:M asynchronous update rule** study on
+- `scripts/train.py` - train one run.
+- `scripts/compare_ratios.py` - the **N:M asynchronous update rule** study on
   InvertedPendulum (N discriminator steps per M policy steps).
-- `scripts/robustness.py` — multi-seed robustness study.
-- `scripts/hierarchical.py` — the **downstream goal-reaching experiment** on
+- `scripts/robustness.py` - multi-seed robustness study.
+- `scripts/hierarchical.py` - the **downstream goal-reaching experiment** on
   pointnav (paper Fig. 6): are the discovered skills useful for a classical RL
   problem?
-- `scripts/visualize.py` — skill trajectory plot + a GIF per skill.
-- `scripts/plot_training.py` — training curves of a single run (Fig. 12).
-- `config.json` — the single place to change every runnable setting.
+- `scripts/visualize.py` - skill trajectory plot + a GIF per skill.
+- `scripts/plot_training.py` - training curves of a single run (Fig. 12).
+- `config.json` - the single place to change every runnable setting.
 
 `train.py` only writes `log.csv` + `checkpoint.pt`; pair it with `plot_training.py`
 and `visualize.py` to get figures. `compare_ratios.py`, `robustness.py`,
@@ -62,20 +62,20 @@ uv run python scripts/visualize.py        # -> skills.png + a GIF per skill
 ```
 
 **N:M update-ratio comparison** (uses the `ratios` list, always on
-InvertedPendulum). Self-contained — trains every ratio and plots:
+InvertedPendulum). Self-contained - trains every ratio and plots:
 
 ```
 uv run python scripts/compare_ratios.py   # -> ratio_curves.png, ratio_returns.png
 ```
 
 **Multi-seed robustness** (uses the `seeds` list, on `config["env"]`).
-Self-contained — trains every seed and plots:
+Self-contained - trains every seed and plots:
 
 ```
 uv run python scripts/robustness.py       # -> seed_curves.png, seed_return_heatmap.png
 ```
 
-**Downstream goal-reaching on pointnav** (paper Section 4.2.2 / Fig. 6 — needs a
+**Downstream goal-reaching on pointnav** (paper Section 4.2.2 / Fig. 6 - needs a
 trained pointnav model first):
 
 ```
@@ -88,7 +88,7 @@ This freezes the discovered skills, adds the goal reward `r_g(s) = -||s - g||^2`
 and lets a meta-controller pick which skill to run. On pointnav one skill per goal
 suffices (Appendix C.2), so the meta-controller greedily picks the skill that gets
 closest to the goal. It writes `hierarchical_reward_vs_skills.png` (task reward
-grows with the number of skills — and beats picking skills at random) and
+grows with the number of skills - and beats picking skills at random) and
 `hierarchical_goals.png` (which skill is chosen for each of the 25 goals). A larger
 `n_skills` (e.g. 20) makes the curve clearer.
 

@@ -1,22 +1,21 @@
 """Hierarchical RL on top of the learned pointnav skills (paper Section 4.2.2 /
 Figure 6, Appendix C.2).
 
-DIAYN learns the skills with no reward. Here we ask the downstream question: are
-those skills useful for an ordinary goal-reaching RL problem? We freeze the
-skills, introduce the goal reward
+DIAYN learns the skills with no reward, but are those skills useful for an classical
+ RL problem? We freeze the skills, introduce the goal reward
 
     r_g(s) = -||s - g||^2
 
 and let a meta-controller pick which skill to run. As the paper notes, on
 pointnav the skills cover the box well enough that the meta-controller only needs
-to take a single action -- choose one skill per goal -- so it reduces to greedily
+to take a single action (choose one skill per goal)so it reduces to greedily
 picking the skill that gets closest to the goal.
 
 The key result (Figure 6): the achievable task reward grows with the number of
 skills, because more skills cover more of the state space. We reproduce that
 curve by subsampling the skills of a single trained model, and compare the greedy
-meta-controller against a baseline that picks a skill at random (which shows that
-it is the *choosing* of skills, not merely having them, that solves the task).
+meta-controller against a baseline that picks a skill at random.Thus w show that it is the 
+choosing of the skill which solves the task, and not the fact that we have them. 
 
 Run with (after training pointnav skills):
 
@@ -95,7 +94,7 @@ def main():
                     color="tab:red", alpha=0.2)
     ax.plot(ks, random_mean, "--o", color="gray", label="random skill choice")
     ax.set(xlabel="number of skills", ylabel=r"task reward  $-\|s-g\|^2$",
-           title=f"Hierarchical RL on pointnav ({len(goals)} goals)  [cf. Fig. 6]")
+           title=f"Hierarchical RL on pointnav ({len(goals)} goals)")
     ax.grid(alpha=0.3)
     ax.legend()
     fig.tight_layout()

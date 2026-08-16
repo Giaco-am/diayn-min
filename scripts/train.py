@@ -37,7 +37,7 @@ def load_config():
 
 def train_one(config, env_name, seed, disc_updates, policy_updates, run_dir):
     """Train a single DIAYN run and return its directory. The N:M asynchronous
-    update rule is `disc_updates` discriminator steps for every `policy_updates`
+    update rule is 'disc_updates' discriminator steps for every 'policy_updates'
     policy steps."""
     random.seed(seed)
     np.random.seed(seed)
@@ -132,7 +132,7 @@ def train_one(config, env_name, seed, disc_updates, policy_updates, run_dir):
 
     log_file.close()
     env.close()
-    print(f"Done. Logs and checkpoint in {run_dir}/")
+    print(f"Logs and checkpoint in {run_dir}/")
     return run_dir
 
 

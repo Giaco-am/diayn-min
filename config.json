@@ -1,8 +1,8 @@
 {
   "env": "InvertedPendulum-v5",
   "n_skills":20,
-  "steps": 200000,
-  "seed": 0,
+  "steps": 300000,
+  "seed": 10,
   "device": "cpu",
 
   "gamma": 0.99,
@@ -22,8 +22,8 @@
   "log_every": 1000,
   "save_every": 25000,
 
-  "ratios": [[1, 1], [2, 1], [5, 1], [1, 2]],
-  "seeds": [0, 1, 2, 3, 4],
+  "ratios": [[1, 1], [5, 1],[10, 1], [1, 2], [1,5], [1,10]],
+  "seeds": [10, 11, 12, 13, 14],
 
   "hierarchical": {
     "goal_grid": 5,

@@ -91,7 +91,8 @@ def main():
 
     mat = np.stack(profiles)
     fig, ax = plt.subplots(figsize=(0.45 * mat.shape[1] + 2, 0.5 * mat.shape[0] + 2))
-    im = ax.imshow(mat, aspect="auto", cmap="viridis")
+    im = ax.imshow(mat, aspect="auto", cmap="viridis", interpolation="nearest")
+
     ax.set(xlabel="skill rank within seed (best -> worst)", ylabel="seed",
            title=f"Per-skill task return across seeds ({env_name})")
     ax.set_yticks(range(len(labels)), labels)

@@ -13,3 +13,6 @@ uv run python scripts/robustness.py       # -> seed_curves.png, seed_return_heat
 uv run python scripts/train.py            # env = pointnav
 uv run python scripts/plot_training.py    # -> training_curves.png (optional)
 uv run python scripts/hierarchical.py     # -> hierarchical_reward_vs_skills.png, hierarchical_goals.png
+
+"env": "pointnav", "n_skills": 6 (or 20), "steps": 100000, "max_episode_steps": 100
+InvertedPendulum-v5, n_skills 20, steps 300000, max_episode_steps null
