@@ -84,7 +84,7 @@ class DIAYNAgent:
         disc_acc = (logits.argmax(dim=-1) == skill).float().mean().item()
         return {"disc_loss": disc_loss.item(), "disc_acc": disc_acc}
 
-    def update_policy(self, batch):
+    def update_policy(self, batch, update_targets=True):
         """One SAC step (critic + actor + target polyak) on the discriminator
         pseudo-reward, with the discriminator held fixed."""
         obs, skill, act = batch["obs"], batch["skill"], batch["act"]
@@ -120,11 +120,8 @@ class DIAYNAgent:
         actor_loss.backward()
         self.actor_opt.step()
 
-        # polyak averaging of the target networks
-        with torch.no_grad():
-            for net, target_net in ((self.q1, self.q1_target), (self.q2, self.q2_target)):
-                for p, p_t in zip(net.parameters(), target_net.parameters()):
-                    p_t.mul_(1.0 - self.cfg.tau).add_(self.cfg.tau * p)
+        if update_targets:
+            self.update_targets()
 
         return {
             "pseudo_reward": reward.mean().item(),
@@ -132,6 +129,13 @@ class DIAYNAgent:
             "actor_loss": actor_loss.item(),
             "policy_entropy": -pi_logp.mean().item(),
         }
+
+    @torch.no_grad()
+    def update_targets(self):
+        """One Polyak update of both target critics (historically once per SAC)."""
+        for net, target_net in ((self.q1, self.q1_target), (self.q2, self.q2_target)):
+            for p, p_t in zip(net.parameters(), target_net.parameters()):
+                p_t.mul_(1.0 - self.cfg.tau).add_(self.cfg.tau * p)
 
     def update(self, batch):
         """Synchronous update (the paper's baseline): one discriminator step and

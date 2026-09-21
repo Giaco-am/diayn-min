@@ -1,113 +1,38 @@
 # diayn-min
 
-A minimal replication of **DIAYN** - *Diversity is All You Need: Learning Skills
-without a Reward Function* (Eysenbach et al., 2018).
+Minimal PyTorch implementation of **DIAYN** (*Diversity Is All You Need*).
+A skill-conditioned SAC policy learns distinguishable behaviors without task
+rewards, using a discriminator reward: `log q(z | s′) - log p(z)`.
+Includes 2D navigation (`pointnav`) and MuJoCo InvertedPendulum experiments.
 
-DIAYN learns a set of distinguishable skills with no task reward. A skill
-`z - p(z)` is sampled at the start of each episode and held fixed. A
-skill-conditioned SAC policy `pi(a | s, z)` is trained on the pseudo-reward
+## Quick start
 
-```
-r(s, z) = log q(z | s') - log p(z)
-```
+Requires Python 3.10+ and `uv`. Run from the repository root:
 
-where `q(z | s)` is a discriminator trained to recover the skill from visited
-states. Maximizing this reward pushes the skills to visit distinguishable
-regions of the state space.
-
-## What's here
-
-- `diayn/` - the core algorithm: networks, agent, replay buffer, the 2D
-  navigation environment, evaluation and plotting helpers.
-- `scripts/train.py` - train one run.
-- `scripts/compare_ratios.py` - the **N:M asynchronous update rule** study on
-  InvertedPendulum (N discriminator steps per M policy steps).
-- `scripts/robustness.py` - multi-seed robustness study.
-- `scripts/hierarchical.py` - the **downstream goal-reaching experiment** on
-  pointnav (paper Fig. 6): are the discovered skills useful for a classical RL
-  problem?
-- `scripts/visualize.py` - skill trajectory plot + a GIF per skill.
-- `scripts/plot_training.py` - training curves of a single run (Fig. 12).
-- `config.json` - the single place to change every runnable setting.
-
-`train.py` only writes `log.csv` + `checkpoint.pt`; pair it with `plot_training.py`
-and `visualize.py` to get figures. `compare_ratios.py`, `robustness.py`,
-`hierarchical.py` and `visualize.py` already produce their own figures.
-
-## Setup
-
-```
+```sh
 uv sync
-```
-
-## Usage
-
-Everything reads `config.json`; edit it to change the experiment.
-
-**2D navigation** (set `"env": "pointnav"`, `"n_skills": 6`, `"steps": 100000`):
-
-```
-uv run python scripts/train.py            # learn the skills
-uv run python scripts/plot_training.py    # -> training_curves.png
-uv run python scripts/visualize.py        # -> skills.png + a GIF per skill
-```
-
-**InvertedPendulum** (set `"env": "InvertedPendulum-v5"`, `"n_skills": 20`,
-`"steps": 300000`, `"max_episode_steps": null`):
-
-```
 uv run python scripts/train.py
-uv run python scripts/plot_training.py    # -> training_curves.png
-uv run python scripts/visualize.py        # -> skills.png + a GIF per skill
+uv run python scripts/plot_training.py
+uv run python scripts/visualize.py
 ```
 
-**N:M update-ratio comparison** (uses the `ratios` list, always on
-InvertedPendulum). Self-contained - trains every ratio and plots:
+Edit [config.json](config.json) to set the environment, skills, training steps,
+seed, and discriminator:SAC update ratio. Results go to
+`runs/{env}_{n_skills}skills_seed{seed}/`: logs, a checkpoint, training curves,
+and skill plots/GIFs.
 
-```
-uv run python scripts/compare_ratios.py   # -> ratio_curves.png, ratio_returns.png
-```
+## Experiments
 
-**Multi-seed robustness** (uses the `seeds` list, on `config["env"]`).
-Self-contained - trains every seed and plots:
+- `scripts/compare_ratios.py`: discriminator:SAC update-ratio comparison.
+- `scripts/robustness.py`: multi-seed robustness study.
+- `scripts/hierarchical.py`: downstream goal-reaching with learned skills.
 
-```
-uv run python scripts/robustness.py       # -> seed_curves.png, seed_return_heatmap.png
-```
+Run these with `uv run python <script>`; settings are in `config.json`.
 
-**Downstream goal-reaching on pointnav** (paper Section 4.2.2 / Fig. 6 - needs a
-trained pointnav model first):
+The **controlled multi-seed study** uses its own configuration and protocol:
 
-```
-uv run python scripts/train.py            # with env = pointnav
-uv run python scripts/plot_training.py    # -> training_curves.png (optional)
-uv run python scripts/hierarchical.py     # -> hierarchical_*.png
+```sh
+uv run python scripts/controlled_experiment.py
+uv run python scripts/plot_controlled.py --root runs/controlled_ratios_v1
 ```
 
-This freezes the discovered skills, adds the goal reward `r_g(s) = -||s - g||^2`,
-and lets a meta-controller pick which skill to run. On pointnav one skill per goal
-suffices (Appendix C.2), so the meta-controller greedily picks the skill that gets
-closest to the goal. It writes `hierarchical_reward_vs_skills.png` (task reward
-grows with the number of skills - and beats picking skills at random) and
-`hierarchical_goals.png` (which skill is chosen for each of the 25 goals). A larger
-`n_skills` (e.g. 20) makes the curve clearer.
-
-Outputs (logs, checkpoints, figures, GIFs) are written under `runs/`.
-
-## config.json
-
-| key | meaning |
-| --- | --- |
-| `env` | `pointnav` or any gymnasium id (we use `InvertedPendulum-v5`) |
-| `n_skills` | number of skills `|Z|` |
-| `steps` | total environment steps |
-| `seed` | random seed for the single-run scripts |
-| `disc_updates` / `policy_updates` | the N:M update rule for `train.py` |
-| `ratios` | `[N, M]` pairs swept by `compare_ratios.py` |
-| `seeds` | seeds swept by `robustness.py` |
-| `hierarchical` | `goal_grid` (NxN goals) and `subset_samples` for `hierarchical.py` |
-
-The remaining keys (`gamma`, `tau`, `alpha`, `lr`, `batch_size`, `hidden`,
-`replay_size`, `start_steps`, `update_after`, `max_episode_steps`, `log_every`,
-`save_every`) are the standard SAC / training hyperparameters and follow the
-paper's Appendix C.
