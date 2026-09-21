@@ -1,5 +1,4 @@
 {
-  "_comment": "MODIFICA DIRICHLET: parametri v2, nomi condivisi con Giaco; salvataggio solo finale.",
   "env": "pointnav",
   "n_skills": 3,
   "steps": 20000,

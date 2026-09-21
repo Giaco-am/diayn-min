@@ -31,7 +31,6 @@ LOG_FIELDS = ["step", "episodes", "disc_loss", "disc_acc", "pseudo_reward",
               "q_loss", "actor_loss", "policy_entropy", "sps"]
 
 
-# === MODIFICA DIRICHLET: stesso loader per configurazione originale e continua. ===
 def load_config(path=None):
     return json.loads((Path(path) if path else ROOT / "config.json").read_text())
 
@@ -45,7 +44,6 @@ def train_one(config, env_name, seed, disc_updates, policy_updates, run_dir):
     torch.manual_seed(seed)
 
     env = make_env(env_name, config["max_episode_steps"])
-    # === MODIFICA DIRICHLET: stesso warm-up riproducibile dello studio v2. ===
     env.action_space.seed(seed)
     obs_dim = int(np.prod(env.observation_space.shape))
     act_dim = int(np.prod(env.action_space.shape))
@@ -62,13 +60,11 @@ def train_one(config, env_name, seed, disc_updates, policy_updates, run_dir):
         obs_dim=obs_dim,
         act_dim=act_dim,
         act_limit=np.asarray(env.action_space.high, dtype=np.float32).tolist(),
-        # === MODIFICA DIRICHLET: parametri opzionali; config.json resta categorico. ===
         **{key: config[key] for key in (
             "latent_type", "prior_alpha", "posterior_total_concentration_min",
             "posterior_total_concentration_max", "discriminator_grad_clip") if key in config},
     )
     agent = DIAYNAgent(cfg)
-    # === MODIFICA DIRICHLET: replay e log comuni, con skill/metriche appropriate. ===
     continuous = cfg.latent_type == "dirichlet"
     buffer = ReplayBuffer(obs_dim, act_dim, config["replay_size"], agent.device,
                           skill_dim=cfg.n_skills if continuous else None)
@@ -85,12 +81,10 @@ def train_one(config, env_name, seed, disc_updates, policy_updates, run_dir):
 
     run_dir = Path(run_dir)
     run_dir.mkdir(parents=True, exist_ok=True)
-    # === MODIFICA DIRICHLET: configurazione e seed accanto ai risultati finali. ===
     (run_dir / "resolved_config.json").write_text(
         json.dumps({**config, "env": env_name, "seed": seed,
                     "disc_updates": disc_updates, "policy_updates": policy_updates}, indent=2) + "\n")
     log_file = open(run_dir / "log.csv", "w", newline="")
-    # === MODIFICA DIRICHLET: registra anche fasi, reset e conteggio update. ===
     logger = csv.DictWriter(log_file, fieldnames=log_fields)
     logger.writeheader()
 
@@ -104,12 +98,10 @@ def train_one(config, env_name, seed, disc_updates, policy_updates, run_dir):
     obs, _ = env.reset(seed=seed)
     skill = agent.sample_skill()
     episodes = 0
-    # === MODIFICA DIRICHLET: le due varianti condividono lo stesso logger. ===
     recent = {k: deque(maxlen=log_every) for k in metric_fields}
     t0 = time.time()
 
     for step in range(1, steps + 1):
-        # === MODIFICA DIRICHLET: curriculum e controllo uniforme con reset abbinati. ===
         phase_change = phase + 1 < len(phases) and step >= phases[phase + 1]["start_step"]
         if phase_change or step in reset_steps:
             if phase_change:
@@ -149,22 +141,18 @@ def train_one(config, env_name, seed, disc_updates, policy_updates, run_dir):
                 for _ in range(policy_updates):
                     policy_m = agent.update_policy(buffer.sample(batch_size))
                 metrics = {**disc_m, **policy_m}
-            # === MODIFICA DIRICHLET: numero degli update di policy effettivi. ===
             updates += policy_updates
             for k in recent:
                 recent[k].append(metrics[k])
 
-        # === MODIFICA DIRICHLET: disc_loss esiste per entrambe le varianti. ===
         if step % log_every == 0 and recent["disc_loss"]:
             row = {k: float(np.mean(v)) for k, v in recent.items()}
             row.update(step=step, episodes=episodes,
                        sps=round(log_every / (time.time() - t0), 1))
-            # === MODIFICA DIRICHLET: rende leggibili i cambi di prior nel CSV. ===
             row.update(phase=phase, prior_alpha=agent.cfg.prior_alpha if continuous else "",
                        buffer_size=buffer.size, buffer_resets=buffer_resets, updates=updates)
             logger.writerow(row)
             log_file.flush()
-            # === MODIFICA DIRICHLET: accuratezza categorica oppure coseno continuo. ===
             score = 'disc_cosine' if continuous else 'disc_acc'
             print(f"step {step:>8d} | ep {episodes:>5d} | "
                   f"{score} {row[score]:.3f} | "
@@ -173,7 +161,6 @@ def train_one(config, env_name, seed, disc_updates, policy_updates, run_dir):
                   f"{row['sps']:.0f} steps/s")
             t0 = time.time()
 
-    # === MODIFICA DIRICHLET: UNICO salvataggio finale; niente replay/RNG/optimizer. ===
     agent.save(run_dir / "checkpoint.pt",
                extra={"env": env_name, "step": steps, "seed": seed,
                       "max_episode_steps": config["max_episode_steps"],

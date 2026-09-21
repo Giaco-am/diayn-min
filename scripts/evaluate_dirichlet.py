@@ -1,4 +1,3 @@
-# === MODIFICA DIRICHLET: valutazione finale compatta con gli stessi probe v2. ===
 """Save PointNav trajectories and metrics; no training or intermediate snapshots."""
 import argparse
 import json
@@ -15,7 +14,6 @@ from diayn.agent import DIAYNAgent
 from diayn.envs import make_env
 
 
-# === MODIFICA DIRICHLET: traiettorie deterministiche con lo stesso reset v2. ===
 def rollout(env, agent, skill, seed):
     if agent.cfg.latent_type == "categorical":
         skill = np.asarray(skill, dtype=np.float32)
@@ -29,7 +27,6 @@ def rollout(env, agent, skill, seed):
             return np.asarray(states)
 
 
-# === MODIFICA DIRICHLET: metriche geometriche identiche al protocollo storico. ===
 def behavior(trajectories, bins=20):
     endpoints = np.asarray([states[-1] for states in trajectories])
     separation = np.mean([float(np.linalg.norm(a - b)) for a, b in combinations(endpoints, 2)])
@@ -49,7 +46,6 @@ def save_trajectories(path, skills, trajectories):
                         **{f"states_{i}": states for i, states in enumerate(trajectories)})
 
 
-# === MODIFICA DIRICHLET: 256 skill interne, 101 punti/lato e skill native categoriche. ===
 def evaluate_checkpoint(checkpoint, seed=12345):
     agent, payload = DIAYNAgent.load(checkpoint)
     if payload["env"] != "pointnav":
@@ -79,7 +75,6 @@ def evaluate_checkpoint(checkpoint, seed=12345):
     for left, right in combinations(range(agent.n_skills), 2):
         edge_skills = np.asarray([(1 - t) * eye[left] + t * eye[right]
                                  for t in np.linspace(0, 1, 101)])
-        # === MODIFICA DIRICHLET: smoothing SOLO dei probe, mai delle skill di training. ===
         edge_skills = (1 - 1e-6 * agent.n_skills) * edge_skills + 1e-6
         edge_skills /= edge_skills.sum(axis=1, keepdims=True)
         paths = [rollout(env, agent, z, seed) for z in edge_skills]
@@ -103,7 +98,6 @@ def evaluate_checkpoint(checkpoint, seed=12345):
     return summary
 
 
-# === MODIFICA DIRICHLET: si puo rivalutare il solo modello finale senza training. ===
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("checkpoint", type=Path)

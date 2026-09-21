@@ -1,4 +1,3 @@
-# === MODIFICA DIRICHLET: piccolo pilot sul trainer di Giaco, con risultati finali. ===
 """Default: uniform and curriculum, seed 10, same 20k budget as the completed study."""
 import argparse
 import csv
@@ -15,7 +14,6 @@ METRICS = ["interior_coverage", "interior_separation", "interior_p95_endpoint_se
            "interior_p95_trajectory_sensitivity", "max_adjacent_endpoint_distance", "mean_path_to_direct_ratio"]
 
 
-# === MODIFICA DIRICHLET: CSV nuovi e confronto con le stesse run gia concluse. ===
 def write_csv(path, rows):
     fields = list(dict.fromkeys(key for row in rows for key in row))
     with open(path, "w", newline="") as handle:
@@ -43,7 +41,6 @@ def compare_reference(output, rows, reference):
         write_csv(output / "comparison_v2.csv", comparisons)
 
 
-# === MODIFICA DIRICHLET: condizioni e seed selezionabili, senza resume o checkpoint intermedi. ===
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=Path, default=ROOT / "config_dirichlet.json")

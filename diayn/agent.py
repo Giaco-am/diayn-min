@@ -15,7 +15,6 @@ import math
 import numpy as np
 import torch
 import torch.nn.functional as F
-# === MODIFICA DIRICHLET: distribuzione continua per prior e posterior. ===
 from torch.distributions import Dirichlet
 
 from .networks import Discriminator, QNetwork, TanhGaussianPolicy
@@ -35,7 +34,6 @@ class DIAYNConfig:
     obs_dim: int = 0
     act_dim: int = 0
     act_limit: list = field(default_factory=list)
-    # === MODIFICA DIRICHLET: default categorico; parametri del protocollo v2. ===
     latent_type: str = "categorical"
     prior_alpha: float = 0.05
     posterior_total_concentration_min: float = 0.01
@@ -59,7 +57,6 @@ class DIAYNAgent:
         self.q2_target = QNetwork(cfg.obs_dim, cfg.n_skills, cfg.act_dim, cfg.hidden).to(self.device)
         self.q1_target.load_state_dict(self.q1.state_dict())
         self.q2_target.load_state_dict(self.q2.state_dict())
-        # === MODIFICA DIRICHLET: cambia solo l'uscita del discriminatore. ===
         self.discriminator = Discriminator(
             cfg.obs_dim, cfg.n_skills, cfg.hidden,
             dirichlet=cfg.latent_type == "dirichlet").to(self.device)
@@ -74,12 +71,10 @@ class DIAYNAgent:
 
     def sample_skill(self):
         """z - p(z), the fixed uniform categorical prior."""
-        # === MODIFICA DIRICHLET: conservare il campione float64, senza clamp. ===
         if self.cfg.latent_type == "dirichlet":
             return self.prior().sample().cpu().numpy()
         return int(np.random.randint(self.n_skills))
 
-    # === MODIFICA DIRICHLET: densita in float64; solo actor/critic usano float32. ===
     def prior(self):
         concentration = torch.full((self.n_skills,), self.cfg.prior_alpha,
                                    dtype=torch.float64, device=self.device)
@@ -98,7 +93,6 @@ class DIAYNAgent:
     @torch.no_grad()
     def act(self, obs, skill, deterministic=False):
         obs_t = torch.as_tensor(obs, dtype=torch.float32, device=self.device).unsqueeze(0)
-        # === MODIFICA DIRICHLET: vettori continui; sul categorico sono probe OOD. ===
         skill_t = torch.as_tensor(skill, device=self.device).unsqueeze(0)
         z = self.one_hot(skill_t) if skill_t.ndim == 1 else skill_t.float()
         action, _ = self.actor(torch.cat([obs_t, z], dim=-1),
@@ -108,7 +102,6 @@ class DIAYNAgent:
     def update_discriminator(self, batch):
         """One discriminator step: maximize log q(z | s') (cross-entropy)."""
         skill, next_obs = batch["skill"], batch["next_obs"]
-        # === MODIFICA DIRICHLET: NLL continua al posto della cross-entropy. ===
         if self.cfg.latent_type == "dirichlet":
             log_q, mean, total = self.posterior_log_prob(next_obs, skill)
             disc_loss = -log_q.mean()
@@ -121,13 +114,11 @@ class DIAYNAgent:
             metrics = {"disc_acc": (logits.argmax(dim=-1) == skill).float().mean().item()}
         self.disc_opt.zero_grad()
         disc_loss.backward()
-        # === MODIFICA DIRICHLET: clipping usato nel training v2, parte dell'update. ===
         if self.cfg.latent_type == "dirichlet":
             norm = torch.nn.utils.clip_grad_norm_(self.discriminator.parameters(),
                                                   self.cfg.discriminator_grad_clip)
             metrics.update(disc_nll=disc_loss.item(), disc_grad_norm=float(norm))
         self.disc_opt.step()
-        # === MODIFICA DIRICHLET: metriche specifiche, ottimizzatore condiviso. ===
         return {"disc_loss": disc_loss.item(), **metrics}
 
     def update_policy(self, batch, update_targets=True):
@@ -135,14 +126,12 @@ class DIAYNAgent:
         pseudo-reward, with the discriminator held fixed."""
         obs, skill, act = batch["obs"], batch["skill"], batch["act"]
         next_obs, done = batch["next_obs"], batch["done"]
-        # === MODIFICA DIRICHLET: il replay resta float64, l'input della rete no. ===
         z = skill.float() if self.cfg.latent_type == "dirichlet" else self.one_hot(skill)
         obs_z = torch.cat([obs, z], dim=-1)
         next_obs_z = torch.cat([next_obs, z], dim=-1)
 
         # pseudo-reward (Eq. 3), from the current discriminator
         with torch.no_grad():
-            # === MODIFICA DIRICHLET: cambia il reward, SAC sottostante e comune. ===
             if self.cfg.latent_type == "dirichlet":
                 log_q_z, _, _ = self.posterior_log_prob(next_obs, skill)
                 log_p_z = self.prior().log_prob(skill)
@@ -158,7 +147,6 @@ class DIAYNAgent:
                                self.q2_target(next_obs_z, next_act))
             target = reward + self.cfg.gamma * (1.0 - done) * (
                 q_next - self.cfg.alpha * next_logp)
-            # === MODIFICA DIRICHLET: cast dopo il calcolo del target in float64. ===
             target = target.to(obs.dtype)
         q1_loss = F.mse_loss(self.q1(obs_z, act), target)
         q2_loss = F.mse_loss(self.q2(obs_z, act), target)
@@ -179,7 +167,6 @@ class DIAYNAgent:
             self.update_targets()
 
         return {
-            # === MODIFICA DIRICHLET: log del prior per confrontare le run v2. ===
             **({"prior_log_prob": log_p_z.mean().item()}
                if self.cfg.latent_type == "dirichlet" else {}),
             "pseudo_reward": reward.mean().item(),
@@ -203,7 +190,6 @@ class DIAYNAgent:
 
     def save(self, path, extra=None):
         payload = {
-            # === MODIFICA DIRICHLET: il modello finale identifica il tipo di skill. ===
             "latent_type": self.cfg.latent_type,
             "config": vars(self.cfg),
             "actor": self.actor.state_dict(),

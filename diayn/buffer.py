@@ -5,7 +5,6 @@ import torch
 
 
 class ReplayBuffer:
-    # === MODIFICA DIRICHLET: stesso replay; skill scalare oppure vettore float64. ===
     def __init__(self, obs_dim, act_dim, capacity, device, skill_dim=None):
         self.obs = np.zeros((capacity, obs_dim), dtype=np.float32)
         self.next_obs = np.zeros((capacity, obs_dim), dtype=np.float32)
@@ -18,7 +17,6 @@ class ReplayBuffer:
         self.size = 0
         self.device = device
 
-    # === MODIFICA DIRICHLET: svuotamento al cambio del prior o nel controllo. ===
     def clear(self):
         self.ptr = self.size = 0
 
