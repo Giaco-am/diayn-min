@@ -62,9 +62,10 @@ class QNetwork(nn.Module):
 class Discriminator(nn.Module):
     """q(z | s): a categorical over the skills, conditioned on a single state."""
 
-    def __init__(self, obs_dim, n_skills, hidden=(300, 300)):
+    # === MODIFICA DIRICHLET: K logits della media e uno della concentrazione. ===
+    def __init__(self, obs_dim, n_skills, hidden=(300, 300), dirichlet=False):
         super().__init__()
-        self.net = mlp(obs_dim, hidden, n_skills)
+        self.net = mlp(obs_dim, hidden, n_skills + int(dirichlet))
 
     def forward(self, obs):
         return self.net(obs)  # unnormalized logits over skills
