@@ -93,12 +93,6 @@ uv run python scripts/run_dirichlet_study.py \
   --seeds 10 11 12 --steps 20000
 ```
 
-The runner selects the prior and reset schedule from `--conditions`; other
-settings can be changed through `--config`. The configuration's `alpha` is the
-SAC entropy coefficient, distinct from the Dirichlet concentration `prior_alpha`.
-Replay resets clear stored transitions and restart the episode while retaining
-the learned networks; updates resume once a full minibatch is available.
-
 ### Evaluation and outputs
 
 Each run is evaluated automatically after training. By default, evaluation uses
@@ -106,11 +100,6 @@ the same 256 uniformly sampled interior skills and 101 probes along each simplex
 edge for every model. Each deterministic rollout starts at the PointNav center
 and holds its skill fixed for the episode horizon.
 
-Saved metrics describe environment coverage on a 20×20 measurement grid,
-pairwise endpoint separation, local endpoint and trajectory sensitivity, and
-endpoint jumps and path/direct-distance ratios along simplex edges.
-For the categorical model, mixed skill vectors are outside the training
-distribution; its native one-hot skills are evaluated separately.
 
 Each invocation creates a new directory:
 
@@ -128,11 +117,4 @@ runs_dirichlet_minimal/pilot_<timestamp>/
 
 The Dirichlet study runner saves one final checkpoint per run. Evaluation
 exports metrics and trajectories; historical experiment outputs are not
-required. If the reference CSV supplied through `--reference` exists, the runner
-also writes a comparison for matching run names and training budgets.
-
-To evaluate a saved PointNav checkpoint from this runner again:
-
-```sh
-uv run python scripts/evaluate_dirichlet.py path/to/checkpoint.pt
-```
+required.
