@@ -53,6 +53,7 @@ def evaluate_checkpoint(checkpoint, seed=12345):
     out = Path(checkpoint).parent / "evaluation"
     out.mkdir(exist_ok=True)
     env = make_env(payload["env"], payload["max_episode_steps"])
+    # All models share these probes, independently of their training prior.
     skills = np.random.default_rng(seed).dirichlet(np.ones(agent.n_skills), size=256)
     trajectories = [rollout(env, agent, z, seed) for z in skills]
     save_trajectories(out / "interior_trajectories.npz", skills, trajectories)

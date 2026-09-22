@@ -64,6 +64,7 @@ class Discriminator(nn.Module):
 
     def __init__(self, obs_dim, n_skills, hidden=(300, 300), dirichlet=False):
         super().__init__()
+        # Dirichlet output: K mean logits and one total-concentration parameter.
         self.net = mlp(obs_dim, hidden, n_skills + int(dirichlet))
 
     def forward(self, obs):

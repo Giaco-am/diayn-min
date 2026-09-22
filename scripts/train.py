@@ -74,6 +74,7 @@ def train_one(config, env_name, seed, disc_updates, policy_updates, run_dir):
                      if continuous else LOG_FIELDS[2:-1])
     log_fields = ['step', 'episodes', 'phase', 'prior_alpha', 'buffer_size',
                   'buffer_resets', 'updates', *metric_fields, 'sps']
+    # Each training phase uses a fixed prior concentration.
     phases = config.get("prior_schedule") or [{"start_step": 1, "alpha": cfg.prior_alpha}]
     reset_steps = config.get("replay_reset_steps", [])
     phase = buffer_resets = updates = 0

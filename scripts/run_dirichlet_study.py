@@ -60,6 +60,7 @@ def main():
     output.mkdir(parents=True)
     print(f"Risultati: {output}", flush=True)
     rows = []
+    # Vary training seeds while keeping the evaluation seed fixed across runs.
     for seed in args.seeds:
         for condition in args.conditions:
             config = {**base, "seed": seed, "latent_type": "categorical" if condition == "categorical" else "dirichlet",

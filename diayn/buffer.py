@@ -9,6 +9,7 @@ class ReplayBuffer:
         self.obs = np.zeros((capacity, obs_dim), dtype=np.float32)
         self.next_obs = np.zeros((capacity, obs_dim), dtype=np.float32)
         self.act = np.zeros((capacity, act_dim), dtype=np.float32)
+        # Keep continuous skill samples in float64 for density calculations.
         self.skill = (np.zeros(capacity, dtype=np.int64) if skill_dim is None
                       else np.zeros((capacity, skill_dim), dtype=np.float64))
         self.done = np.zeros(capacity, dtype=np.float32)

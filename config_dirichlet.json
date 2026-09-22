@@ -1,4 +1,5 @@
 {
+  "_comment": "PointNav defaults; the study runner selects the prior and replay resets per condition.",
   "env": "pointnav",
   "n_skills": 3,
   "steps": 20000,

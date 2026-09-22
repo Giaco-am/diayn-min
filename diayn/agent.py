@@ -35,6 +35,7 @@ class DIAYNConfig:
     act_dim: int = 0
     act_limit: list = field(default_factory=list)
     latent_type: str = "categorical"
+    # Skill-prior concentration is independent of the SAC entropy coefficient.
     prior_alpha: float = 0.05
     posterior_total_concentration_min: float = 0.01
     posterior_total_concentration_max: float = 1000.0
